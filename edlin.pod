@@ -1,0 +1,268 @@
+=head1 NAME
+
+edlin - FreeDOS line-oriented text editor
+
+=head1 SYNOPSIS
+
+B<edlin> [I<filename>]
+
+=head1 DESCRIPTION
+
+The FreeDOS B<edlin> program is a small line-oriented text editor. Unline
+screen-based editors, B<edlin> does not display the text being edited
+at all times, instead only showing parts of it upon the user's request.
+
+When invoked, B<edlin> presents the user a command line allowing them
+to manipulate the text by applying operations on the specified lines of
+the text file. All commands operate on whole lines or ranges of lines.
+
+In general, the structure of an B<edlin> command is as follows:
+
+=over
+
+[I<LINE>[,I<LINE...>]]I<COMMAND>[I<PARAMETERS...>]
+
+=back
+
+A line number can be one of the following:
+
+=over
+
+=item A sequence of digits as a literal line number, such as B<12>
+for line 12.
+
+=item A full stop (B<.>), meaning the current line in the file.
+
+=item A dollar sign (B<$>), meaning the last line in the file.
+
+=item A hash sign (B<#>), meaning the line number just after the last
+line in the file.
+
+=item A number added or subtracted from a line number (B<+I<n>> or
+B<-I<n>>). This is useful for relative line addressing, such as B<.+1>
+for the line after the current line.
+
+=back
+
+String parameters may be enclosed in either single or double quotes,
+and may contain the following escape sequences:
+
+=over
+
+=item B<\a>: Alert character
+
+=item B<\b>: Backspace character
+
+=item B<\e>: Escape
+
+=item B<\f>: Form feed
+
+=item B<\t>: Horizontal tab
+
+=item B<\v>: Vertical tab
+
+=item B<">: Double quote
+
+=item B<'>: Single quote
+
+=item B<.>: Full stop
+
+=item B<\>: Backslash
+
+=item B<\x>I<XX>: Hexadecimal value, where each B<X> is a hexadecimal
+digit (B<0> to B<F>, uppercase or lowercase)
+
+=item B<\d>I<NNN>: Decimal value, where each B<N> is a decimal digit
+(B<0> to B<9>)
+
+=item B<\O>I<OO>: Octal value, where each B<O> is an octal digit (B<0>
+to B<7>)
+
+=item B<\^>I<C>: Control character, such as B<\^J> for the literal
+"control J" (linefeed) character.
+
+=back
+
+=head1 COMMAND SYNOPSIS
+
+The edlin program supports the following editor commands:
+
+=over
+
+=item B<#>: Edit a single line
+
+The edlin program outputs the single line indicated by the number, and
+the next inputted line replaces the outputted line in the file.
+
+=item B<a>: Append to the file
+
+This command is equivalent to B<$+1i>
+
+=item [I<LINE>]B<,>[I<LINE>]B<,>I<LINE>B<,>[I<NUMBER>]B<c>: Copy a range
+of lines
+
+Copy a range of consecutive lines to another location in the buffer. The
+parameters are, in order:
+
+=over
+
+=item 1. The first line you want to copy (default is the current line)
+
+=item 2. The last line you want to copy (default is the current line)
+
+=item 3. The line before which you want to I<insert> the block of lines
+
+=item 4. The number of times you want to copy the block (default is 1)
+
+=back
+
+After copying lines, use the B<l> (list) command to see the new line
+numbers.
+
+=item [I<LINE>][B<,>I<LINE>]B<d>: Delete a range of lines
+
+Delete a block of consecutive lines from the buffer. The parameters are
+the first and last line of the block to be deleted.
+
+If you omit the first parameter, delete the block from the current line
+I<to the line specified in the second parameter> (be sure to include the
+comma).
+
+If you omit the second parameter, delete I<only> the line specified in
+the first parameter.
+
+Omitting both parameters deletes the current line.
+
+=item B<e >I<filename>: Save and exit
+
+This command is equivalent to B<w >I<filename> followed by B<q>
+
+This verifies whether the user actually wants to quit before doing so.
+To quit, answer the "Abort edit (Y/N)?" prompt with "yes."
+
+=item [I<LINE>]B<i>: Insert lines
+
+Enter insert mode. Its parameter is the line number I<before> which you
+want to insert lines.
+
+While entering text, you can use the escape sequences from above.
+
+To exit insert mode, type B<.> (full stop) on a line by itself. (If you
+need a line with just a period, you need to enter it as B<\.>)
+
+After exiting insert mode, the line I<after> the inserted text becomes the
+current line, unless the insertion was appended to the end of the buffer,
+in which case the last line in the buffer becomes the new current line.
+
+=item [I<LINE>][B<,>I<LINE>]B<l>: List lines
+
+List the lines of text to the screen. If you omit the first parameter,
+start showing text starting at 11 lines before the current line.
+
+If you omit the second parameter, shows a screen of text beginning with
+the line specified in the first parameter.
+
+If you omit both parameters, show a screen of text starting at 11 lines
+before the current line.
+
+If the number of lines to show is longer than the number of lines on the
+screen, edlin will prompt after each screen.
+
+=item [I<LINE>]B<,>[I<LINE>]B<,>I<LINE>B<m>: Move lines
+
+Move a block of text to the line before the number specified in the
+third parameter. It is similar to copying then deleting the original
+block.
+
+=item [I<LINE>][B<,>I<LINE>]B<p>: Print lines
+
+Similar to the B<l> (list) command except that the default parameters
+starts at the current line instead of 11 lines before it.
+
+=item B<q>: Quit
+
+Quit the program.
+
+This verifies whether the user actually wants to quit before doing so.
+To quit, answer the \"Abort edit (Y/N)?\" prompt with \"yes.\"
+
+=item [I<LINE>][B<,>I<LINE>][B<?>]B<r>I<STRING>B<,>I<REPLACEMENT>:
+Replace string
+
+Replace all occurrences of the first string with the second between the
+two lines specified.
+
+If you omit the first parameter, start replacing at the line I<after> the
+current line.
+
+If you omit the second parameter, stops replacing text at the last line
+of the buffer.
+
+If you include the B<?> (question mark), edlin will print a confirmation
+message before replacing text.
+
+=item [I<LINE>][B<,>I<LINE>][B<?>]B<s>I<SUBSTRING>: Search for a substring
+
+Search for the first line containing the specified substring.
+
+If you omit the first parameter, start searching from the current line.
+
+If you omit the second parameter, stop the search at the end of the
+buffer.
+
+If you include the B<?> (question mark), edlin will print a confirmation
+message. Responding "no" to the confirmation message continues the
+search; "yes" ends the search.
+
+If the search found the substring, the current line will be set to the
+line where the search ended.
+
+=item [I<LINE>]B<t >I<filename>: Transfer a file
+
+Insert the contents of a file before the specified line number.
+
+If you omit the line number, insert before the current line.
+
+=item [I<LINE>]B<w >I<filename>: Write the file
+
+Write the first B<#> lines in the buffer to the specified file.
+
+If you omit the number parameter, write all the lines in the buffer to
+the file.
+
+=item B<?>: Print short help notice
+
+=back
+
+=head1 EXIT STATUS
+
+B<edlin> aborts and returns non-zero if the standard input is closed when
+it expects a command, e.g. if the user presses Control-D at the command
+prompt.
+
+=head1 HISTORY
+
+The FreeDOS B<edlin> was developed by Gregory Pietsch in 2003.
+
+The original B<edlin> was created by Tim Paterson in 1980, inspired by
+the CP/M context editor B<ED>, which itself was distantly inspired by
+the Unix B<ed> line editor.
+
+=head1 NOTES
+
+Unlike the original B<edlin>, the FreeDOS B<edlin> uses a comma (B<,>)
+as a parameter separator for the "replace" command (B<r>) instead of
+the DOS end-of-file control character (Control-Z).
+
+The command B<l>, when specified in upper case (B<L>) is synonymous to
+B<p> and starts printing from the current line.
+
+=head1 COPYRIGHT
+
+Copyright (C) 2003-2024 Gregory Pietsch
+
+Copyright (C) 2025 Andrej Shadura
+
+=head1 SEE ALSO
+
+L<ed(1)>
